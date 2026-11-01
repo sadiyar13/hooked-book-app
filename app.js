@@ -127,7 +127,12 @@
   }
 
   function saveCatalogData() {
-    localStorage.setItem('hooked_custom_catalog', JSON.stringify(state.catalog));
+    const minimal = state.catalog.map(b => ({
+      id: b.id,
+      published: b.published,
+      chapters: (b.chapters || []).map(c => ({ id: c.id, published: c.published }))
+    }));
+    localStorage.setItem('hooked_custom_catalog', JSON.stringify(minimal));
   }
 
   function updateUserUI() {
@@ -984,9 +989,17 @@
   function setupPWA() {
     // Register Service Worker
     if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('[SW] New version activated, reloading for fresh assets...');
+        window.location.reload();
+      });
+
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('[SW] Registered successfully:', reg.scope))
+          .then(reg => {
+            console.log('[SW] Registered successfully:', reg.scope);
+            reg.update(); // Check for updates on every load
+          })
           .catch(err => console.warn('[SW] Registration failed:', err));
       });
     }
