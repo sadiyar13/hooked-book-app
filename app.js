@@ -1022,6 +1022,9 @@
     return String(n).replace(/[0-9]/g, w => persian[+w]);
   }
 
+  // Expose API for testing and direct navigation
+  window.__app = { state, openBook, openChapter, renderCurrentSlide, nextSlide, prevSlide };
+
   // Start app on DOMContentLoaded
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
