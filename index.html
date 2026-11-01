@@ -11,8 +11,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="قلاب">
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <meta name="apple-mobile-web-app-title" content="خلاصه کتاب">
+  <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <!-- Stylesheet -->
@@ -42,7 +42,9 @@
 
     <!-- VIEW 1: ONBOARDING / NAME WELCOME -->
     <section class="view active" id="view-onboarding">
-      <div class="onboarding-hero-icon">🪝</div>
+      <div class="onboarding-hero-icon">
+        <img src="logo.png" alt="لوگوی اپلیکیشن" class="app-brand-logo" />
+      </div>
       <h1 class="onboarding-title">به اپلیکیشن خلاصه‌کتاب خوش آمدید</h1>
       <p class="onboarding-subtitle">
         یادگیری عمیق مفاهیم کتاب‌های تحول‌آفرین دنیا، متناسب با زمان اندک و در قالب اسلایدهای عمودی موبایلی.
@@ -61,8 +63,11 @@
     <!-- VIEW 2: BOOKSHELF / LIBRARY -->
     <section class="view" id="view-bookshelf">
       <div class="section-title">
-        <span>کتابخانه و دوره‌ها</span>
-        <span class="badge-counter" id="books-count-badge">۱ کتاب فعال</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="logo.png" alt="لوگو" class="header-app-logo" />
+          <span>کتابخانه و دوره‌ها</span>
+        </div>
+        <span class="badge-counter" id="books-count-badge">۲ کتاب فعال</span>
       </div>
 
       <!-- Book List Container -->
