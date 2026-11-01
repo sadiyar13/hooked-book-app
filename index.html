@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>خلاصه کتاب‌های برتر | قلاب</title>
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="قلاب">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container" id="app-container">
+    
+    <!-- Top Global Header (Visible in Library & Chapter Views) -->
+    <header class="app-header" id="global-header" style="display: none;">
+      <div class="profile-chip" id="profile-chip" title="ویرایش نام کاربری">
+        <div class="avatar-circle" id="user-avatar-initial">م</div>
+        <span class="user-name-text" id="user-name-display">محمد</span>
+        <span style="font-size: 11px; color: var(--accent-cyan);">✎</span>
+      </div>
+      <div class="header-actions">
+        <div class="streak-badge" title="روزهای متوالی مطالعه">
+          <span>🔥</span>
+          <span id="streak-counter">۱ روز</span>
+        </div>
+        <button class="icon-btn" id="btn-open-admin" title="پنل مدیریت و انتشار قسمت‌ها">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: ONBOARDING / NAME WELCOME -->
+    <section class="view active" id="view-onboarding">
+      <div class="onboarding-hero-icon">🪝</div>
+      <h1 class="onboarding-title">به اپلیکیشن خلاصه‌کتاب خوش آمدید</h1>
+      <p class="onboarding-subtitle">
+        یادگیری عمیق مفاهیم کتاب‌های تحول‌آفرین دنیا، متناسب با زمان اندک و در قالب اسلایدهای عمودی موبایلی.
+      </p>
+
+      <div class="onboarding-card">
+        <label class="input-label" for="input-user-name">نام یا نام‌مستعار شما چیه؟</label>
+        <input type="text" id="input-user-name" class="name-input" placeholder="مثلاً: محمد" maxlength="25" autofocus autocomplete="name" />
+        <button class="btn-primary" id="btn-start-onboarding">
+          <span>شروع یادگیری و مطالعه</span>
+          <span>🚀</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 2: BOOKSHELF / LIBRARY -->
+    <section class="view" id="view-bookshelf">
+      <div class="section-title">
+        <span>کتابخانه و دوره‌ها</span>
+        <span class="badge-counter" id="books-count-badge">۱ کتاب فعال</span>
+      </div>
+
+      <!-- Book List Container -->
+      <div id="books-list-container">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- PWA Install Banner -->
+      <div class="install-banner" id="pwa-install-banner" style="display: none;">
+        <div class="install-banner-text">
+          <strong>📲 نصب مستقیم روی گوشی</strong><br>
+          برای دسترسی آفلاین و سریع، اپ را روی صفحه اصلی نصب کنید.
+        </div>
+        <button class="install-banner-btn" id="btn-install-pwa">نصب اپ</button>
+      </div>
+    </section>
+
+    <!-- VIEW 3: CHAPTERS / EPISODES LIST -->
+    <section class="view" id="view-chapters">
+      <div class="nav-back-row">
+        <button class="back-btn" id="btn-back-to-bookshelf" title="بازگشت به فهرست کتاب‌ها">➔</button>
+        <div style="flex: 1;">
+          <h2 id="chapters-book-title" style="font-size: 16px; font-weight: bold; color: #fff;">کتاب قلاب</h2>
+          <span id="chapters-book-author" style="font-size: 12px; color: var(--text-muted);">نیر ایال</span>
+        </div>
+        <button class="icon-btn" id="btn-share-book-progress" title="اشتراک‌گذاری کارنامه کلی">📤</button>
+      </div>
+
+      <!-- Book Hero Progress Card -->
+      <div class="book-hero-banner">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 13px; color: var(--text-muted);">میزان مطالعه شما:</span>
+          <span id="book-progress-percent" style="font-size: 16px; font-weight: bold; color: var(--accent-cyan);">۰٪</span>
+        </div>
+        <div class="progress-bar-bg" style="height: 8px; margin-bottom: 12px;">
+          <div class="progress-bar-fill" id="book-progress-fill" style="width: 0%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim);">
+          <span id="book-episodes-completed-stat">۰ از ۳ قسمت خوانده شد</span>
+          <span style="color: #34d399;" id="book-badge-status">درحال یادگیری</span>
+        </div>
+      </div>
+
+      <!-- Episodic Release Info Banner -->
+      <div class="episodic-notice-card">
+        <span style="font-size: 20px;">💡</span>
+        <div>
+          <strong>انتشار قسمت‌به‌قسمت:</strong> قسمت‌های ۱ تا ۳ هم‌اکنون فعال هستند. قسمت‌های بعدی به زودی به صورت خودکار در اپلیکیشن اضافه می‌شوند!
+        </div>
+      </div>
+
+      <!-- Chapters List -->
+      <div class="chapters-list" id="chapters-list-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 4: VERTICAL STORY READER (9:16) -->
+    <section class="view" id="view-reader">
+      <!-- Top Segments Progress (Instagram Story style) -->
+      <div class="story-segments-bar" id="story-segments">
+        <!-- Segments inserted dynamically -->
+      </div>
+
+      <!-- Reader Top Bar -->
+      <div class="reader-top-bar">
+        <button class="icon-btn" id="btn-reader-close" style="width: 32px; height: 32px; font-size: 14px;" title="بستن">✕</button>
+        <span class="reader-chapter-title" id="reader-chapter-title">قسمت ۱</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="reader-counter-pill" id="reader-slide-counter">۱ / ۷</span>
+          <button class="icon-btn" id="btn-reader-share" style="width: 32px; height: 32px; font-size: 13px;" title="اشتراک‌گذاری">📤</button>
+        </div>
+      </div>
+
+      <!-- Main Story Slide Viewport (Touch Swipe & Vertical Scroll) -->
+      <div class="story-card-viewport" id="story-viewport">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Floating Bottom Dock -->
+      <div class="reader-floating-dock">
+        <button class="reader-btn reader-btn-prev" id="btn-story-prev">
+          <span>➔</span>
+          <span>قبلی</span>
+        </button>
+        
+        <button class="reader-btn reader-btn-share" id="btn-story-quick-share" title="ارسال پیشرفت این قسمت">
+          📤
+        </button>
+
+        <button class="reader-btn reader-btn-next" id="btn-story-next">
+          <span>بعدی</span>
+          <span>⬅</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- MODAL 1: CELEBRATION (On Chapter Finish) -->
+    <div class="modal-overlay" id="modal-celebration">
+      <div class="modal-sheet" style="text-align: center;">
+        <div class="celebrate-icon-box">🏆</div>
+        <h2 class="celebrate-title" id="celebrate-user-heading">آفرین محمد جان! 👏</h2>
+        <p class="celebrate-desc" id="celebrate-chapter-text">
+          شما این قسمت را با موفقیت مطالعه کردید و یک گام به تسلط کامل نزدیک شدید.
+        </p>
+
+        <div class="celebrate-stats-box">
+          <div class="celebrate-stats-num" id="celebrate-new-percent">۳۳٪</div>
+          <div class="celebrate-stats-lbl" id="celebrate-stats-sub">پیشرفت از قسمت‌های منتشر شده کتاب</div>
+        </div>
+
+        <button class="btn-primary" id="btn-celebrate-share" style="margin-bottom: 10px;">
+          <span>اشتراک‌گذاری افتخار با دوستان</span>
+          <span>📢</span>
+        </button>
+        
+        <button class="btn-secondary" id="btn-celebrate-continue">
+          <span>رفتن به قسمت بعدی یا فهرست</span>
+          <span>➔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL 2: SMART SHARING & STORY CARD GENERATOR -->
+    <div class="modal-overlay" id="modal-share">
+      <div class="modal-sheet">
+        <button class="modal-close-btn" id="btn-close-share-modal">✕</button>
+        <h3 style="font-size: 17px; font-weight: bold; color: #fff; margin-bottom: 6px; text-align: center;">
+          اشتراک‌گذاری پیشرفت مطالعه 🎯
+        </h3>
+        <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 12px;">
+          دوستانت را با دستاورد خودت شگفت‌زده کن و به چالش مطالعه دعوت کن!
+        </p>
+
+        <!-- Formatted Message Preview -->
+        <div class="share-preview-box" id="share-text-preview">
+          <!-- Text preview generated dynamically -->
+        </div>
+
+        <div class="share-actions-stack">
+          <button class="btn-primary" id="btn-do-native-share">
+            <span>ارسال مستقیم (تلگرام / واتساپ / ایتا)</span>
+            <span>📲</span>
+          </button>
+
+          <button class="btn-secondary" id="btn-copy-share-text">
+            <span>کپی متن پیام در کلیپ‌بورد</span>
+            <span>📋</span>
+          </button>
+
+          <!-- Visual Instagram/Telegram Story Card Generator -->
+          <div style="border-top: 1px solid var(--border-subtle); margin-top: 10px; padding-top: 12px;">
+            <div style="font-size: 13px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 6px; text-align: center;">
+              🎨 ساخت کارت تصویری استوری (۹:۱۶)
+            </div>
+            
+            <div class="canvas-story-container">
+              <canvas id="story-canvas" width="540" height="960"></canvas>
+            </div>
+
+            <button class="btn-secondary" id="btn-download-story-card" style="background: rgba(56, 189, 248, 0.15); border-color: var(--accent-cyan); color: var(--accent-cyan);">
+              <span>دانلود عکس استوری (کیفیت بالا)</span>
+              <span>🖼️</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: ADMIN & GRADUAL RELEASE PANEL -->
+    <div class="modal-overlay" id="modal-admin">
+      <div class="modal-sheet">
+        <button class="modal-close-btn" id="btn-close-admin-modal">✕</button>
+        <h3 style="font-size: 17px; font-weight: bold; color: #fff; margin-bottom: 6px; text-align: center;">
+          پنل مدیریت و انتشار محتوا ⚙️
+        </h3>
+        <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 16px;">
+          کنترل انتشار تدریجی قسمت‌ها و افزودن کتاب‌های جدید به اپلیکیشن دوستان
+        </p>
+
+        <!-- PIN Screen (if locked) -->
+        <div id="admin-pin-container" style="display: block; text-align: center;">
+          <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">رمز عبور مدیر را وارد کنید (پیش‌فرض: 1234)</p>
+          <input type="password" id="input-admin-pin" class="name-input" placeholder="••••" style="width: 140px; margin: 0 auto 14px auto;" maxlength="8" />
+          <button class="btn-primary" id="btn-verify-pin" style="width: 140px; margin: 0 auto;">ورود</button>
+        </div>
+
+        <!-- Management Screen (Unlocked) -->
+        <div id="admin-dashboard-container" style="display: none;">
+          <h4 style="font-size: 14px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 10px;">
+            انتشار تدریجی قسمت‌های کتاب قلاب:
+          </h4>
+          <div id="admin-chapters-toggle-list" style="margin-bottom: 18px;">
+            <!-- Chapter switches injected here -->
+          </div>
+
+          <h4 style="font-size: 14px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 10px;">
+            همگام‌سازی ابری با اپلیکیشن دوستان (Cloud Sync):
+          </h4>
+          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px;">
+            می‌توانید یک آدرس JSON (مثلاً GitHub Gist یا آدرس سرور دلخواه) قرار دهید تا هر زمان کتاب یا قسمتی اضافه کردید، اپ دوستان به طور خودکار بروزرسانی شود:
+          </p>
+          <input type="url" id="input-cloud-sync-url" class="name-input" placeholder="https://api.jsonbin.io/... یا GitHub Raw URL" style="font-size: 13px; direction: ltr; margin-bottom: 10px;" />
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button class="btn-secondary" id="btn-save-cloud-url" style="flex: 1; font-size: 12px;">ذخیره آدرس</button>
+            <button class="btn-secondary" id="btn-sync-now" style="flex: 1; font-size: 12px; color: var(--accent-cyan);">همگام‌سازی الآن</button>
+          </div>
+
+          <h4 style="font-size: 14px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 10px;">
+            خروجی دیتای کاتالوگ (Export JSON):
+          </h4>
+          <button class="btn-secondary" id="btn-export-catalog-json" style="margin-bottom: 12px;">
+            <span>کپی کل دیتای کتاب‌ها به صورت JSON</span>
+            <span>📋</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-msg" id="toast-message">پیام سیستم</div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="books_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
