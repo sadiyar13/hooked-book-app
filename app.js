@@ -194,9 +194,18 @@
       card.className = 'book-card';
       
       const totalUpcoming = (book.chapters || []).length - publishedChapters.length;
-      const statusText = book.published !== false 
+      const lastChId = state.progress[book.id]?.lastChId;
+      const lastSlide = state.progress[book.id]?.lastSlide || 0;
+      const activeCh = (book.chapters || []).find(c => c.id === lastChId);
+      const hasActiveReading = activeCh && !completedList.includes(lastChId) && lastSlide > 0 && activeCh.published;
+
+      let statusText = book.published !== false 
         ? `${toPersianDigits(publishedChapters.length)} قسمت آماده مطالعه ${totalUpcoming > 0 ? `| ${toPersianDigits(totalUpcoming)} قسمت به‌زودی ⏳` : ''}`
         : 'به‌زودی در اپلیکیشن ⏳';
+
+      if (hasActiveReading) {
+        statusText = `▶ ادامه مطالعه: قسمت ${toPersianDigits(activeCh.number)} (اسلاید ${toPersianDigits(lastSlide + 1)})`;
+      }
 
       card.innerHTML = `
         <div class="book-card-header">
@@ -289,18 +298,43 @@
     const container = document.getElementById('chapters-list-container');
     container.innerHTML = '';
 
+    // Active in-progress resume banner
+    const lastChId = state.progress[book.id]?.lastChId;
+    const lastSlide = state.progress[book.id]?.lastSlide || 0;
+    const activeCh = (book.chapters || []).find(c => c.id === lastChId);
+
+    if (activeCh && !completedList.includes(lastChId) && lastSlide > 0 && activeCh.published) {
+      const resumeCard = document.createElement('div');
+      resumeCard.style.cssText = 'background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(59,130,246,0.12)); border: 1.5px solid rgba(56,189,248,0.45); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: transform 0.15s;';
+      resumeCard.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: #38bdf8; color: #0f172a; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; flex-shrink: 0;">▶</div>
+          <div>
+            <div style="font-size: 13.5px; font-weight: bold; color: #ffffff;">ادامه از جایی که بودید</div>
+            <div style="font-size: 11.5px; color: #94a3b8;">قسمت ${toPersianDigits(activeCh.number)} • اسلاید ${toPersianDigits(lastSlide + 1)} از ${toPersianDigits(activeCh.slides?.length || 0)}</div>
+          </div>
+        </div>
+        <span style="font-size: 12px; font-weight: bold; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 6px 12px; border-radius: 20px;">ادامه ➔</span>
+      `;
+      resumeCard.addEventListener('click', () => openReader(activeCh.id, lastSlide));
+      container.appendChild(resumeCard);
+    }
+
     (book.chapters || []).forEach(chapter => {
       const isCompleted = completedList.includes(chapter.id);
       const isLocked = !chapter.published;
+      const isInProgress = (chapter.id === lastChId) && !isCompleted && (lastSlide > 0);
 
       const item = document.createElement('div');
-      item.className = `chapter-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`;
+      item.className = `chapter-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''} ${isInProgress ? 'in-progress' : ''}`;
 
       let statusPillHtml = '';
       if (isLocked) {
         statusPillHtml = '<span class="chapter-status-pill pill-locked">🔒 به‌زودی ⏳</span>';
       } else if (isCompleted) {
         statusPillHtml = '<span class="chapter-status-pill pill-done">✓ خوانده شد (مرور)</span>';
+      } else if (isInProgress) {
+        statusPillHtml = `<span class="chapter-status-pill" style="background: rgba(251,191,36,0.18); color: #fbbf24; border: 1px solid rgba(251,191,36,0.35);">📖 ادامه (اسلاید ${toPersianDigits(lastSlide + 1)}) ➔</span>`;
       } else {
         statusPillHtml = '<span class="chapter-status-pill pill-ready">آماده مطالعه ➔</span>';
       }
@@ -331,7 +365,7 @@
   }
 
   // --- STORY READER (9:16) ENGINE ---
-  function openReader(chapterId) {
+  function openReader(chapterId, resumeSlide = null) {
     const book = state.catalog.find(b => b.id === state.activeBookId);
     if (!book) return;
 
@@ -342,13 +376,27 @@
     }
 
     state.activeChapterId = chapterId;
-    state.activeSlideIndex = 0;
+
+    if (resumeSlide !== null && resumeSlide >= 0 && resumeSlide < chapter.slides.length) {
+      state.activeSlideIndex = resumeSlide;
+    } else if (
+      state.progress[book.id]?.lastChId === chapterId &&
+      typeof state.progress[book.id]?.lastSlide === 'number' &&
+      state.progress[book.id].lastSlide > 0 &&
+      state.progress[book.id].lastSlide < chapter.slides.length &&
+      !state.progress[book.id]?.completedChapters?.includes(chapterId)
+    ) {
+      state.activeSlideIndex = state.progress[book.id].lastSlide;
+    } else {
+      state.activeSlideIndex = 0;
+    }
 
     // Track active book progress
     if (!state.progress[book.id]) {
-      state.progress[book.id] = { completedChapters: [], lastChId: chapterId, lastSlide: 0 };
+      state.progress[book.id] = { completedChapters: [], lastChId: chapterId, lastSlide: state.activeSlideIndex };
     }
     state.progress[book.id].lastChId = chapterId;
+    state.progress[book.id].lastSlide = state.activeSlideIndex;
     saveProgressData();
 
     setupStorySegments(chapter.slides.length);
@@ -435,6 +483,16 @@
     } else {
       prevBtn.style.opacity = '1';
     }
+
+    // Auto-save exact current reading position
+    if (book && state.activeChapterId) {
+      if (!state.progress[book.id]) {
+        state.progress[book.id] = { completedChapters: [], lastChId: state.activeChapterId, lastSlide: 0 };
+      }
+      state.progress[book.id].lastChId = state.activeChapterId;
+      state.progress[book.id].lastSlide = state.activeSlideIndex;
+      saveProgressData();
+    }
   }
 
   function nextSlide() {
@@ -469,8 +527,9 @@
 
     if (!state.progress[bookId].completedChapters.includes(chId)) {
       state.progress[bookId].completedChapters.push(chId);
-      saveProgressData();
     }
+    state.progress[bookId].lastSlide = 0; // Completed chapter, reset active slide
+    saveProgressData();
 
     // Calculate updated book percentage
     const publishedChapters = book.chapters.filter(c => c.published);
