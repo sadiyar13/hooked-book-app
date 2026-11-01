@@ -1,5 +1,5 @@
 // Service Worker for 100% Offline Mobile Book Summary App
-const CACHE_NAME = 'hooked-book-cache-v5';
+const CACHE_NAME = 'hooked-book-cache-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -16,11 +16,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-caching offline assets');
+      console.log('[SW] Pre-caching offline assets for', CACHE_NAME);
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -39,20 +40,17 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-First Strategy: Always fetch fresh content when online, fallback to cache when offline
 self.addEventListener('fetch', (event) => {
-  // Navigation or asset request: cache-first with network fallback
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        // Cache new local resources dynamically
+    fetch(event.request)
+      .then((networkResponse) => {
         if (
           networkResponse &&
           networkResponse.status === 200 &&
-          event.request.url.startsWith(self.location.origin) &&
-          !event.request.url.includes('/api/')
+          event.request.url.startsWith(self.location.origin)
         ) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -60,12 +58,16 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Offline fallback for navigation requests
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });
