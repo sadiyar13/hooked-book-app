@@ -1,5 +1,5 @@
 // Service Worker for 100% Offline Mobile Book Summary App
-const CACHE_NAME = 'hooked-book-cache-v1';
+const CACHE_NAME = 'hooked-book-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,7 +9,8 @@ const ASSETS_TO_CACHE = [
   './books_data.js',
   './app.js',
   './manifest.json',
-  './icon.svg',
+  './logo.png',
+  './icon.png',
   './icon-192.png',
   './icon-512.png'
 ];
