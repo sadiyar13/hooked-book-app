@@ -761,6 +761,11 @@ html, body {
   font-size: 12.5px;
   color: var(--text-muted);
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+  text-align: center;
 }
 
 .reader-counter-pill {
@@ -826,18 +831,17 @@ html, body {
   padding: 0 8px;
 }
 
-/* Unclipped Diagram Box */
+/* Diagram Box */
 .story-diagram-box {
   width: 100%;
   background: rgba(15, 23, 42, 0.75);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px 6px;
+  padding: 10px 6px;
   margin-bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: visible; /* Never cut off SVG labels or circles */
   box-sizing: border-box;
 }
 
@@ -845,9 +849,14 @@ html, body {
   width: 100%;
   max-width: 100%;
   height: auto;
-  max-height: 250px;
+  max-height: 270px;
   display: block;
-  overflow: visible; /* Ensures 100% full diagram is visible */
+  margin: 0 auto;
+}
+
+.story-diagram-box svg text {
+  font-family: 'BYekan', Tahoma, 'Vazirmatn', sans-serif;
+  user-select: none;
 }
 
 /* Styled Content from Slide */
@@ -861,12 +870,22 @@ html, body {
   box-sizing: border-box;
 }
 
+.story-content-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
 .story-content-card .card-title {
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: bold;
   color: var(--accent-cyan);
-  margin-bottom: 10px;
-  line-height: 1.45;
+  text-align: center;
+  margin-bottom: 0;
+  line-height: 1.5;
   word-break: normal;
   overflow-wrap: break-word;
 }
@@ -885,6 +904,9 @@ html, body {
   font-size: 12.5px;
   line-height: 1.7;
   color: #e2e8f0;
+  text-align: right;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .story-content-card .point-icon {
@@ -921,11 +943,15 @@ html, body {
 .story-content-card .highlight-box {
   background: rgba(56, 189, 248, 0.08);
   border-right: 3px solid var(--accent-cyan);
-  border-radius: 6px;
-  padding: 10px 12px;
-  font-size: 12px;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12.5px;
   line-height: 1.7;
   color: #cbd5e1;
+  text-align: center;
+  margin-top: 10px;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 /* Floating Bottom Control Bar */
