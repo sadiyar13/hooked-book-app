@@ -80,11 +80,25 @@
     // 2. Catalog
     try {
       const customCatalog = JSON.parse(localStorage.getItem('hooked_custom_catalog') || 'null');
-      if (customCatalog && Array.isArray(customCatalog) && customCatalog.length === 1 && customCatalog[0].id === 'hooked') {
+      if (window.INITIAL_BOOKS_CATALOG && Array.isArray(window.INITIAL_BOOKS_CATALOG)) {
+        // Merge saved chapter published state with fresh code catalog
+        state.catalog = window.INITIAL_BOOKS_CATALOG.map(book => {
+          const savedBook = customCatalog ? customCatalog.find(b => b.id === book.id) : null;
+          if (!savedBook) return book;
+          return {
+            ...book,
+            published: savedBook.published !== undefined ? savedBook.published : book.published,
+            chapters: (book.chapters || []).map(ch => {
+              const savedCh = (savedBook.chapters || []).find(c => c.id === ch.id);
+              if (savedCh && typeof savedCh.published === 'boolean') {
+                return { ...ch, published: savedCh.published };
+              }
+              return ch;
+            })
+          };
+        });
+      } else if (customCatalog && Array.isArray(customCatalog)) {
         state.catalog = customCatalog;
-      } else if (window.INITIAL_BOOKS_CATALOG) {
-        state.catalog = window.INITIAL_BOOKS_CATALOG;
-        localStorage.removeItem('hooked_custom_catalog');
       }
     } catch (e) {
       console.warn('Error loading catalog:', e);
@@ -658,10 +672,27 @@
   }
 
   function renderAdminDashboard() {
+    const selector = document.getElementById('admin-book-selector');
+    if (selector) {
+      const selectedId = state.adminSelectedBookId || state.activeBookId || (state.catalog[0] && state.catalog[0].id);
+      selector.innerHTML = '';
+      state.catalog.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = `${b.title} (${b.author})`;
+        if (b.id === selectedId) opt.selected = true;
+        selector.appendChild(opt);
+      });
+      selector.onchange = (e) => {
+        state.adminSelectedBookId = e.target.value;
+        renderAdminDashboard();
+      };
+    }
+
+    const currentBookId = state.adminSelectedBookId || (selector ? selector.value : null) || (state.catalog[0] && state.catalog[0].id);
+    const book = state.catalog.find(b => b.id === currentBookId) || state.catalog[0];
     const list = document.getElementById('admin-chapters-toggle-list');
     list.innerHTML = '';
-
-    const book = state.catalog.find(b => b.id === 'hooked') || state.catalog[0];
     if (!book) return;
 
     (book.chapters || []).forEach(chapter => {
@@ -901,14 +932,14 @@
     });
 
     document.getElementById('btn-verify-pin').addEventListener('click', () => {
-      const pin = document.getElementById('input-admin-pin').value;
-      if (pin === '1234' || pin === 'admin') {
+      const pin = (document.getElementById('input-admin-pin').value || '').trim();
+      if (pin === '1337') {
         state.isAdminAuthenticated = true;
         document.getElementById('admin-pin-container').style.display = 'none';
         document.getElementById('admin-dashboard-container').style.display = 'block';
         renderAdminDashboard();
       } else {
-        showToast('رمز عبور اشتباه است (پیش‌فرض: 1234)');
+        showToast('رمز عبور اشتباه است.');
       }
     });
 
