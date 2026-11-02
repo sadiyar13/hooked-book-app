@@ -289,6 +289,18 @@ html, body {
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
 }
 
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-7px); }
+  40%, 80% { transform: translateX(7px); }
+}
+
+.name-input.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.5) !important;
+  animation: shakeError 0.4s ease-in-out;
+}
+
 .btn-primary {
   width: 100%;
   background: linear-gradient(135deg, #0284c7, #3b82f6);
