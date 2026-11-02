@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -25,8 +25,8 @@
     <!-- Top Global Header (Visible in Library & Chapter Views) -->
     <header class="app-header" id="global-header" style="display: none;">
       <div class="profile-chip" id="profile-chip" title="ویرایش نام کاربری">
-        <div class="avatar-circle" id="user-avatar-initial">م</div>
-        <span class="user-name-text" id="user-name-display">محمد</span>
+        <div class="avatar-circle" id="user-avatar-initial">👤</div>
+        <span class="user-name-text" id="user-name-display">کاربر گرامی</span>
         <span style="font-size: 11px; color: var(--accent-cyan);">✎</span>
       </div>
       <div class="header-actions">
@@ -34,9 +34,6 @@
           <span>🔥</span>
           <span id="streak-counter">۱ روز</span>
         </div>
-        <button class="icon-btn" id="btn-open-admin" title="پنل مدیریت و انتشار قسمت‌ها">
-          ⚙️
-        </button>
       </div>
     </header>
 
@@ -51,8 +48,8 @@
       </p>
 
       <div class="onboarding-card">
-        <label class="input-label" for="input-user-name">نام یا نام‌مستعار شما چیه؟</label>
-        <input type="text" id="input-user-name" class="name-input" placeholder="مثلاً: محمد" maxlength="25" autofocus autocomplete="name" />
+        <label class="input-label" for="input-user-name">نام یا نام‌مستعار شما چیست؟</label>
+        <input type="text" id="input-user-name" class="name-input" placeholder="نام شما (مثلاً: سارا، علی، رضا...)" maxlength="25" autofocus autocomplete="name" />
         <button class="btn-primary" id="btn-start-onboarding">
           <span>شروع یادگیری و مطالعه</span>
           <span>🚀</span>
@@ -169,7 +166,7 @@
     <div class="modal-overlay" id="modal-celebration">
       <div class="modal-sheet" style="text-align: center;">
         <div class="celebrate-icon-box">🏆</div>
-        <h2 class="celebrate-title" id="celebrate-user-heading">آفرین محمد جان! 👏</h2>
+        <h2 class="celebrate-title" id="celebrate-user-heading">آفرین! 👏</h2>
         <p class="celebrate-desc" id="celebrate-chapter-text">
           شما این قسمت را با موفقیت مطالعه کردید و یک گام به تسلط کامل نزدیک شدید.
         </p>
@@ -237,70 +234,13 @@
       </div>
     </div>
 
-    <!-- MODAL 3: ADMIN & GRADUAL RELEASE PANEL -->
-    <div class="modal-overlay" id="modal-admin">
-      <div class="modal-sheet">
-        <button class="modal-close-btn" id="btn-close-admin-modal">✕</button>
-        <h3 style="font-size: 17px; font-weight: bold; color: #fff; margin-bottom: 6px; text-align: center;">
-          پنل مدیریت و انتشار محتوا ⚙️
-        </h3>
-        <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 16px;">
-          کنترل انتشار تدریجی قسمت‌ها و افزودن کتاب‌های جدید به اپلیکیشن دوستان
-        </p>
-
-        <!-- PIN Screen (if locked) -->
-        <div id="admin-pin-container" style="display: block; text-align: center;">
-          <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">رمز عبور مدیر را وارد کنید:</p>
-          <input type="password" id="input-admin-pin" class="name-input" placeholder="••••" style="width: 140px; margin: 0 auto 14px auto;" maxlength="8" />
-          <button class="btn-primary" id="btn-verify-pin" style="width: 140px; margin: 0 auto;">ورود</button>
-        </div>
-
-        <!-- Management Screen (Unlocked) -->
-        <div id="admin-dashboard-container" style="display: none;">
-          <div style="margin-bottom: 14px;">
-            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">کتاب مورد نظر برای مدیریت انتشار:</label>
-            <select id="admin-book-selector" class="name-input" style="width: 100%; font-family: inherit; font-size: 13px; background: rgba(15, 23, 42, 0.9); padding: 8px 12px; cursor: pointer; border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff;">
-              <!-- Dynamic books -->
-            </select>
-          </div>
-          <h4 style="font-size: 14px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 10px;">
-            وضعیت انتشار قسمت‌های کتاب انتخاب شده:
-          </h4>
-          <div id="admin-chapters-toggle-list" style="margin-bottom: 18px;">
-            <!-- Chapter switches injected here -->
-          </div>
-
-          <h4 style="font-size: 14px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 10px;">
-            همگام‌سازی ابری با اپلیکیشن دوستان (Cloud Sync):
-          </h4>
-          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px;">
-            می‌توانید یک آدرس JSON (مثلاً GitHub Gist یا آدرس سرور دلخواه) قرار دهید تا هر زمان کتاب یا قسمتی اضافه کردید، اپ دوستان به طور خودکار بروزرسانی شود:
-          </p>
-          <input type="url" id="input-cloud-sync-url" class="name-input" placeholder="https://api.jsonbin.io/... یا GitHub Raw URL" style="font-size: 13px; direction: ltr; margin-bottom: 10px;" />
-          
-          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-            <button class="btn-secondary" id="btn-save-cloud-url" style="flex: 1; font-size: 12px;">ذخیره آدرس</button>
-            <button class="btn-secondary" id="btn-sync-now" style="flex: 1; font-size: 12px; color: var(--accent-cyan);">همگام‌سازی الآن</button>
-          </div>
-
-          <h4 style="font-size: 14px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 10px;">
-            خروجی دیتای کاتالوگ (Export JSON):
-          </h4>
-          <button class="btn-secondary" id="btn-export-catalog-json" style="margin-bottom: 12px;">
-            <span>کپی کل دیتای کتاب‌ها به صورت JSON</span>
-            <span>📋</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Toast Notification -->
     <div class="toast-msg" id="toast-message">پیام سیستم</div>
 
   </div>
 
   <!-- Scripts -->
-  <script src="books_data.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="books_data.js?v=9"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
