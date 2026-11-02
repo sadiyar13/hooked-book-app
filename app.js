@@ -1095,7 +1095,17 @@
   }
 
   // Expose API for testing and direct navigation
-  window.__app = { state, openBook, openChapter, renderCurrentSlide, nextSlide, prevSlide };
+  window.__app = { 
+    state, 
+    openBook, 
+    openReader, 
+    openChapter: openReader, 
+    renderCurrentSlide, 
+    nextSlide, 
+    prevSlide,
+    switchView,
+    renderBookshelf
+  };
 
   // Start app on DOMContentLoaded
   if (document.readyState === 'loading') {
