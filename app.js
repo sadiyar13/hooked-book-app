@@ -5,17 +5,16 @@
   // --- STATE ---
   let state = {
     user: {
-      name: 'محمد',
+      name: '',
       streak: 1,
+      onboarded: false,
       lastActive: new Date().toISOString()
     },
     catalog: [],
     progress: {}, // { [bookId]: { completedChapters: [], lastChId: null, lastSlide: 0 } }
     activeBookId: 'hooked',
     activeChapterId: null,
-    activeSlideIndex: 0,
-    cloudSyncUrl: '',
-    isAdminAuthenticated: false
+    activeSlideIndex: 0
   };
 
   // --- DOM CACHE ---
@@ -28,8 +27,7 @@
 
   const modals = {
     celebration: document.getElementById('modal-celebration'),
-    share: document.getElementById('modal-share'),
-    admin: document.getElementById('modal-admin')
+    share: document.getElementById('modal-share')
   };
 
   const header = document.getElementById('global-header');
@@ -47,9 +45,9 @@
     setupEventListeners();
     setupPWA();
 
-    // Check onboarding status
-    const savedUser = localStorage.getItem('hooked_app_user');
-    if (savedUser) {
+    // Check onboarding status: User must have explicitly completed onboarding and have their own name
+    const isProperlyOnboarded = state.user && state.user.onboarded && state.user.name && state.user.name !== 'محمد';
+    if (isProperlyOnboarded) {
       updateUserUI();
       header.style.display = 'flex';
       switchView('bookshelf');
@@ -57,11 +55,11 @@
     } else {
       header.style.display = 'none';
       switchView('onboarding');
-    }
-
-    // Try background cloud sync if configured
-    if (state.cloudSyncUrl) {
-      syncWithCloud(state.cloudSyncUrl, true);
+      const input = document.getElementById('input-user-name');
+      if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 300);
+      }
     }
   }
 
@@ -77,33 +75,10 @@
       console.warn('Error reading user:', e);
     }
 
-    // 2. Catalog
-    try {
-      const customCatalog = JSON.parse(localStorage.getItem('hooked_custom_catalog') || 'null');
-      if (window.INITIAL_BOOKS_CATALOG && Array.isArray(window.INITIAL_BOOKS_CATALOG)) {
-        // Merge saved chapter published state with fresh code catalog
-        state.catalog = window.INITIAL_BOOKS_CATALOG.map(book => {
-          const savedBook = customCatalog ? customCatalog.find(b => b.id === book.id) : null;
-          if (!savedBook) return book;
-          return {
-            ...book,
-            published: savedBook.published !== undefined ? savedBook.published : book.published,
-            chapters: (book.chapters || []).map(ch => {
-              const savedCh = (savedBook.chapters || []).find(c => c.id === ch.id);
-              if (savedCh && typeof savedCh.published === 'boolean') {
-                return { ...ch, published: savedCh.published };
-              }
-              return ch;
-            })
-          };
-        });
-      } else if (customCatalog && Array.isArray(customCatalog)) {
-        state.catalog = customCatalog;
-      }
-    } catch (e) {
-      console.warn('Error loading catalog:', e);
-      state.catalog = window.INITIAL_BOOKS_CATALOG || [];
-    }
+    // 2. Catalog - Always loaded directly from window.INITIAL_BOOKS_CATALOG (books_data.js)
+    state.catalog = (window.INITIAL_BOOKS_CATALOG && Array.isArray(window.INITIAL_BOOKS_CATALOG))
+      ? window.INITIAL_BOOKS_CATALOG
+      : [];
 
     // 3. Progress
     try {
@@ -112,9 +87,6 @@
     } catch (e) {
       state.progress = {};
     }
-
-    // 4. Cloud URL
-    state.cloudSyncUrl = localStorage.getItem('hooked_cloud_sync_url') || '';
   }
 
   function saveUserData() {
@@ -126,20 +98,11 @@
     localStorage.setItem('hooked_app_progress', JSON.stringify(state.progress));
   }
 
-  function saveCatalogData() {
-    const minimal = state.catalog.map(b => ({
-      id: b.id,
-      published: b.published,
-      chapters: (b.chapters || []).map(c => ({ id: c.id, published: c.published }))
-    }));
-    localStorage.setItem('hooked_custom_catalog', JSON.stringify(minimal));
-  }
-
   function updateUserUI() {
-    const name = state.user.name || 'محمد';
-    userNameDisplay.textContent = name;
-    userAvatarInitial.textContent = name.trim().charAt(0) || 'م';
-    streakCounter.textContent = `${state.user.streak || 1} روز`;
+    const name = (state.user && state.user.name) ? state.user.name : 'کاربر گرامی';
+    if (userNameDisplay) userNameDisplay.textContent = name;
+    if (userAvatarInitial) userAvatarInitial.textContent = name.trim().charAt(0) || '👤';
+    if (streakCounter) streakCounter.textContent = `${toPersianDigits(state.user.streak || 1)} روز`;
   }
 
   // --- VIEW SWITCHING ---
@@ -542,7 +505,7 @@
 
   // --- CELEBRATION MODAL ---
   function showCelebration(chapter, percent, completedCount, totalPublished) {
-    const name = state.user.name || 'محمد';
+    const name = state.user.name || 'کاربر گرامی';
     document.getElementById('celebrate-user-heading').textContent = `آفرین ${name} جان! 👏`;
     document.getElementById('celebrate-chapter-text').textContent = 
       `شما قسمت «${chapter.title}» را با موفقیت تمام کردید. هم‌اکنون ${toPersianDigits(completedCount)} قسمت از ${toPersianDigits(totalPublished)} قسمت منتشر شده را با موفقیت خوانده‌اید!`;
@@ -553,7 +516,7 @@
 
   // --- SMART SHARING SYSTEM ---
   function openShareModal(targetChapterId = null) {
-    const name = state.user.name || 'محمد';
+    const name = state.user.name || 'کاربر گرامی';
     const book = state.catalog.find(b => b.id === state.activeBookId);
     const publishedChapters = (book.chapters || []).filter(c => c.published);
     const completedList = (state.progress[book.id]?.completedChapters) || [];
@@ -721,144 +684,59 @@
     if (stroke) ctx.stroke();
   }
 
-  // --- ADMIN & GRADUAL RELEASE PANEL ---
-  function openAdminModal() {
-    if (state.isAdminAuthenticated) {
-      document.getElementById('admin-pin-container').style.display = 'none';
-      document.getElementById('admin-dashboard-container').style.display = 'block';
-      renderAdminDashboard();
-    } else {
-      document.getElementById('admin-pin-container').style.display = 'block';
-      document.getElementById('admin-dashboard-container').style.display = 'none';
-      document.getElementById('input-admin-pin').value = '';
-    }
-    modals.admin.classList.add('active');
-  }
-
-  function renderAdminDashboard() {
-    const selector = document.getElementById('admin-book-selector');
-    if (selector) {
-      const selectedId = state.adminSelectedBookId || state.activeBookId || (state.catalog[0] && state.catalog[0].id);
-      selector.innerHTML = '';
-      state.catalog.forEach(b => {
-        const opt = document.createElement('option');
-        opt.value = b.id;
-        opt.textContent = `${b.title} (${b.author})`;
-        if (b.id === selectedId) opt.selected = true;
-        selector.appendChild(opt);
-      });
-      selector.onchange = (e) => {
-        state.adminSelectedBookId = e.target.value;
-        renderAdminDashboard();
-      };
-    }
-
-    const currentBookId = state.adminSelectedBookId || (selector ? selector.value : null) || (state.catalog[0] && state.catalog[0].id);
-    const book = state.catalog.find(b => b.id === currentBookId) || state.catalog[0];
-    const list = document.getElementById('admin-chapters-toggle-list');
-    list.innerHTML = '';
-    if (!book) return;
-
-    (book.chapters || []).forEach(chapter => {
-      const row = document.createElement('div');
-      row.className = 'admin-row';
-
-      row.innerHTML = `
-        <div style="flex: 1; padding-left: 10px;">
-          <div style="font-size: 13px; font-weight: bold; color: #fff;">قسمت ${toPersianDigits(chapter.number)}: ${chapter.title}</div>
-          <div style="font-size: 11px; color: ${chapter.published ? '#34d399' : '#fbbf24'};">
-            ${chapter.published ? '✅ منتشر شده (فعال برای همه)' : '🔒 در حالت به‌زودی (قفل)'}
-          </div>
-        </div>
-        <div>
-          <label class="switch">
-            <input type="checkbox" id="toggle-ch-${chapter.id}" ${chapter.published ? 'checked' : ''}>
-            <span class="slider"></span>
-          </label>
-        </div>
-      `;
-
-      const input = row.querySelector(`#toggle-ch-${chapter.id}`);
-      input.addEventListener('change', (e) => {
-        chapter.published = e.target.checked;
-        saveCatalogData();
-        renderAdminDashboard();
-        renderBookshelf();
-        if (views.chapters.classList.contains('active')) {
-          renderChapters();
-        }
-        showToast(`قسمت ${toPersianDigits(chapter.number)} ${chapter.published ? 'منتشر شد ✅' : 'قفل شد 🔒'}`);
-      });
-
-      list.appendChild(row);
-    });
-
-    // Cloud Sync URL input
-    document.getElementById('input-cloud-sync-url').value = state.cloudSyncUrl || '';
-  }
-
-  // --- CLOUD SYNC ENGINE ---
-  async function syncWithCloud(url, isSilent = false) {
-    if (!url) {
-      if (!isSilent) showToast('لطفاً آدرس همگام‌سازی را وارد کنید.');
-      return;
-    }
-
-    try {
-      if (!isSilent) showToast('درحال بررسی و دریافت آپدیت‌ها... ⏳');
-      const res = await fetch(url, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const remoteCatalog = await res.json();
-
-      if (Array.isArray(remoteCatalog) && remoteCatalog.length > 0) {
-        state.catalog = remoteCatalog;
-        saveCatalogData();
-        renderBookshelf();
-        if (views.chapters.classList.contains('active')) {
-          renderChapters();
-        }
-        if (!isSilent) showToast('کاتالوگ کتاب‌ها با موفقیت بروز شد! 🎉');
-      } else {
-        throw new Error('فرمت داده‌ها نامعتبر است.');
-      }
-    } catch (err) {
-      console.warn('Sync error:', err);
-      if (!isSilent) showToast(`خطا در همگام‌سازی: ${err.message}`);
-    }
-  }
-
   // --- EVENT LISTENERS ---
   function setupEventListeners() {
     // 1. Onboarding
-    document.getElementById('btn-start-onboarding').addEventListener('click', () => {
-      const input = document.getElementById('input-user-name');
-      const val = (input.value || '').trim();
-      state.user.name = val || 'محمد';
-      saveUserData();
-      header.style.display = 'flex';
-      switchView('bookshelf');
-      renderBookshelf();
-      showToast(`خوش آمدید ${state.user.name} جان! 📚`);
-    });
+    const btnStart = document.getElementById('btn-start-onboarding');
+    if (btnStart) {
+      btnStart.addEventListener('click', () => {
+        const input = document.getElementById('input-user-name');
+        const val = (input ? input.value : '').trim();
+        if (!val) {
+          if (input) {
+            input.classList.remove('input-error');
+            void input.offsetWidth;
+            input.classList.add('input-error');
+            input.focus();
+          }
+          showToast('لطفاً ابتدا نام یا نام‌مستعار خود را بنویسید ✨');
+          return;
+        }
+        state.user.name = val;
+        state.user.onboarded = true;
+        saveUserData();
+        header.style.display = 'flex';
+        switchView('bookshelf');
+        renderBookshelf();
+        showToast(`خوش آمدید ${state.user.name} جان! 📚`);
+      });
+    }
 
-    document.getElementById('input-user-name').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        document.getElementById('btn-start-onboarding').click();
-      }
-    });
+    const inputName = document.getElementById('input-user-name');
+    if (inputName) {
+      inputName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const btn = document.getElementById('btn-start-onboarding');
+          if (btn) btn.click();
+        }
+      });
+    }
 
     // 2. Profile Chip Edit Name
-    profileChip.addEventListener('click', () => {
-      const current = state.user.name || 'محمد';
-      const newName = prompt('نام جدید خود را وارد کنید:', current);
-      if (newName && newName.trim()) {
-        state.user.name = newName.trim();
-        saveUserData();
-        if (views.bookshelf.classList.contains('active')) renderBookshelf();
-        if (views.chapters.classList.contains('active')) renderChapters();
-        showToast('نام شما بروزرسانی شد.');
-      }
-    });
+    if (profileChip) {
+      profileChip.addEventListener('click', () => {
+        const current = state.user.name || '';
+        const newName = prompt('نام جدید خود را وارد کنید:', current);
+        if (newName && newName.trim()) {
+          state.user.name = newName.trim();
+          state.user.onboarded = true;
+          saveUserData();
+          if (views.bookshelf && views.bookshelf.classList.contains('active')) renderBookshelf();
+          if (views.chapters && views.chapters.classList.contains('active')) renderChapters();
+          showToast('نام شما بروزرسانی شد.');
+        }
+      });
+    }
 
     // 3. Navigation
     document.getElementById('btn-back-to-bookshelf').addEventListener('click', () => {
@@ -988,54 +866,8 @@
       showToast('عکس استوری با موفقیت ذخیره شد! 🖼️');
     });
 
-    // 7. Admin Panel Controls
-    document.getElementById('btn-open-admin').addEventListener('click', openAdminModal);
-
-    document.getElementById('btn-close-admin-modal').addEventListener('click', () => {
-      modals.admin.classList.remove('active');
-    });
-
-    document.getElementById('btn-verify-pin').addEventListener('click', () => {
-      const pin = (document.getElementById('input-admin-pin').value || '').trim();
-      if (pin === '1337') {
-        state.isAdminAuthenticated = true;
-        document.getElementById('admin-pin-container').style.display = 'none';
-        document.getElementById('admin-dashboard-container').style.display = 'block';
-        renderAdminDashboard();
-      } else {
-        showToast('رمز عبور اشتباه است.');
-      }
-    });
-
-    document.getElementById('input-admin-pin').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('btn-verify-pin').click();
-    });
-
-    document.getElementById('btn-save-cloud-url').addEventListener('click', () => {
-      const url = (document.getElementById('input-cloud-sync-url').value || '').trim();
-      state.cloudSyncUrl = url;
-      localStorage.setItem('hooked_cloud_sync_url', url);
-      showToast('آدرس همگام‌سازی ذخیره شد.');
-    });
-
-    document.getElementById('btn-sync-now').addEventListener('click', () => {
-      const url = (document.getElementById('input-cloud-sync-url').value || '').trim();
-      state.cloudSyncUrl = url;
-      localStorage.setItem('hooked_cloud_sync_url', url);
-      syncWithCloud(url, false);
-    });
-
-    document.getElementById('btn-export-catalog-json').addEventListener('click', () => {
-      const json = JSON.stringify(state.catalog, null, 2);
-      navigator.clipboard.writeText(json).then(() => {
-        showToast('دیتای کامل کتاب‌ها به صورت JSON کپی شد! 📋');
-      }).catch(() => {
-        showToast('خطا در کپی داده‌ها.');
-      });
-    });
-
     // Close modals on clicking overlay backdrop
-    Object.values(modals).forEach(modal => {
+    Object.values(modals).filter(Boolean).forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           modal.classList.remove('active');
